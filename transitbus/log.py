@@ -1,13 +1,13 @@
 import asyncio
 import json
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Protocol, runtime_checkable
 
 from transitbus.events import Event
 
 
-@runtime_checkable
-class EventLog(Protocol):
+class WAL(ABC):
+    @abstractmethod
     async def append(self, event: Event) -> None: ...
 
 
@@ -15,7 +15,7 @@ def serialize(event: Event) -> dict[str, object]:
     return {"type": type(event).__name__, **event.model_dump(mode="json")}
 
 
-class JsonlEventLog:
+class JsonlWAL(WAL):
     def __init__(self, path: Path | str) -> None:
         self._path = Path(path)
         self._path.parent.mkdir(parents=True, exist_ok=True)

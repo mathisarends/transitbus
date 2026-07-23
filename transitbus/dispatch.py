@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Generator
+from typing import Self
 
 from transitbus.events import Event, HandlerResult
 
@@ -31,11 +32,11 @@ class Dispatch[TResult]:
         self._results = results
         self._finished.set()
 
-    async def wait(self, timeout: float | None = None) -> "Dispatch[TResult]":
+    async def wait(self, timeout: float | None = None) -> Self:
         await asyncio.wait_for(self._finished.wait(), timeout)
         return self
 
-    def __await__(self) -> Generator[object, None, "Dispatch[TResult]"]:
+    def __await__(self) -> Generator[object, None, Self]:
         return self.wait().__await__()
 
     async def results(self) -> list[HandlerResult]:

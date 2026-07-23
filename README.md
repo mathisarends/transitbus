@@ -36,8 +36,8 @@ asyncio.run(main())
 - **Automatic causality.** An event dispatched from inside a handler becomes a
   child of the running event, tracked with a `ContextVar` — no globals, no
   wiring by hand.
-- **Pluggable write-ahead log.** The bus depends on the `EventLog` protocol;
-  drop in `JsonlEventLog` for a file, or any object with `async append`.
+- **Pluggable write-ahead log.** The bus writes completed events to a `WAL`;
+  drop in `JsonlWAL` for a file, or subclass `WAL` for anything else.
 
 ## Usage
 
@@ -104,14 +104,14 @@ paid = await bus.expect(PaymentCharged, where=lambda e: e.order_id == "A-1", tim
 ### Write-ahead log
 
 ```python
-from transitbus import EventBus, JsonlEventLog
+from transitbus import EventBus, JsonlWAL
 
-bus = EventBus(log=JsonlEventLog("events.jsonl"))
+bus = EventBus(wal=JsonlWAL("events.jsonl"))
 ```
 
 Every processed event is appended as one JSON object per line, tagged with its
-type. Awaiting a dispatch guarantees its event has been written. Any object with
-an `async append(event)` satisfies the `EventLog` protocol.
+type. Awaiting a dispatch guarantees its event has been written. Subclass `WAL`
+and implement `async append(event)` to write anywhere else.
 
 ## Development
 

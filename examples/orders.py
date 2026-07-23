@@ -2,7 +2,7 @@ import asyncio
 import tempfile
 from pathlib import Path
 
-from transitbus import Event, EventBus, JsonlEventLog
+from transitbus import Event, EventBus, JsonlWAL
 
 
 class OrderPlaced(Event[None]):
@@ -18,7 +18,7 @@ class PaymentCharged(Event[str]):
 async def main() -> None:
     wal = Path(tempfile.gettempdir()) / "transitbus-orders.jsonl"
     wal.unlink(missing_ok=True)
-    bus = EventBus(name="orders", log=JsonlEventLog(wal))
+    bus = EventBus(name="orders", wal=JsonlWAL(wal))
 
     @bus.on(OrderPlaced)
     async def charge_card(event: OrderPlaced) -> None:

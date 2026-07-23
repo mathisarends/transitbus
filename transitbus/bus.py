@@ -10,7 +10,7 @@ from typing import overload
 from transitbus.context import current_event, handling
 from transitbus.dispatch import Dispatch
 from transitbus.events import Event, HandlerResult
-from transitbus.log import EventLog
+from transitbus.log import WAL
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +42,11 @@ class EventBus:
         self,
         *,
         name: str | None = None,
-        log: EventLog | None = None,
+        wal: WAL | None = None,
         max_history: int | None = 1000,
     ) -> None:
         self.name = name or f"bus-{uuid.uuid4().hex[:8]}"
-        self._log = log
+        self._wal = wal
         self._handlers: dict[type[Event], list[Handler]] = {}
         self._waiters: list[_Waiter] = []
         self._history: deque[Event] = deque(maxlen=max_history)
@@ -120,11 +120,11 @@ class EventBus:
         with handling(event):
             results = [await self._run(h, event) for h in self._handlers_for(event)]
 
-        if self._log is not None:
+        if self._wal is not None:
             try:
-                await self._log.append(event)
+                await self._wal.append(event)
             except Exception:
-                logger.exception("event log append failed for %s", type(event).__name__)
+                logger.exception("wal append failed for %s", type(event).__name__)
 
         handle._complete(results)
 

@@ -1,14 +1,12 @@
-from __future__ import annotations
-
 import json
 
 from tests.conftest import Ping
-from transitbus import Event, EventBus, JsonlEventLog, serialize
+from transitbus import WAL, Event, EventBus, JsonlWAL, serialize
 
 
 async def test_wal_appends_completed_events(tmp_path) -> None:
     path = tmp_path / "events.jsonl"
-    bus = EventBus(log=JsonlEventLog(path))
+    bus = EventBus(wal=JsonlWAL(path))
     bus.on(Ping, lambda e: None)
 
     await bus.dispatch(Ping(note="one"))
@@ -20,14 +18,14 @@ async def test_wal_appends_completed_events(tmp_path) -> None:
     assert [r["note"] for r in records] == ["one", "two"]
 
 
-async def test_log_protocol_accepts_any_appender() -> None:
+async def test_custom_wal_subclass() -> None:
     captured: list[Event] = []
 
-    class ListLog:
+    class ListWAL(WAL):
         async def append(self, event: Event) -> None:
             captured.append(event)
 
-    bus = EventBus(log=ListLog())
+    bus = EventBus(wal=ListWAL())
     bus.on(Ping, lambda e: None)
     await bus.dispatch(Ping(note="x"))
 

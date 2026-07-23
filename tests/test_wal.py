@@ -1,7 +1,8 @@
 import json
 
 from tests.conftest import Ping
-from transitbus import WAL, Event, EventBus, JsonlWAL, serialize
+from transitbus import WAL, Event, EventBus, JsonlWAL
+from transitbus.wal import _serialize
 
 
 async def test_wal_appends_completed_events(tmp_path) -> None:
@@ -33,7 +34,7 @@ async def test_custom_wal_subclass() -> None:
 
 
 def test_serialize_tags_event_type() -> None:
-    payload = serialize(Ping(note="hello"))
+    payload = _serialize(Ping(note="hello"))
     assert payload["type"] == "Ping"
     assert payload["note"] == "hello"
     assert "id" in payload and "created_at" in payload

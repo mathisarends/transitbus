@@ -30,8 +30,8 @@ asyncio.run(main())
 - **Subscribe by type, not by string.** `bus.on(OrderPlaced, handler)` — and
   because matching is structural, a handler on a base class also receives every
   subclass. Subscribing to `Event` observes everything; there is no `'*'`.
-- **Lean events.** An `Event` is just data plus `id`, `parent_id` and
-  `created_at`. Results live on the `Dispatch` handle that `dispatch()` returns,
+- **Lean events.** An `Event` is just data plus `id`, `parent_id`, `created_at`
+  and `path`. Results live on the `Dispatch` handle that `dispatch()` returns,
   not bolted onto the event.
 - **Automatic causality.** An event dispatched from inside a handler becomes a
   child of the running event, tracked with a `ContextVar` — no globals, no
@@ -100,6 +100,22 @@ handler processes it right away without blocking the queue.
 # resolves as soon as a matching event is dispatched
 paid = await bus.expect(PaymentCharged, where=lambda e: e.order_id == "A-1", timeout=30)
 ```
+
+### Forwarding between buses
+
+Because `dispatch` is itself a valid handler, one bus can subscribe to another.
+`forward_to` is the readable form of `on(Event, other.dispatch)`:
+
+```python
+main.forward_to(auth)
+auth.forward_to(data)
+data.forward_to(main)  # cycles are fine
+```
+
+Each event carries `path` — the names of the buses it has visited. A bus skips
+an event it has already seen, so cycles terminate on their own; no handler
+introspection involved. Within a bus, more specific subscriptions run first, so
+forwarding (a base-`Event` subscription) happens after local handlers.
 
 ### Write-ahead log
 

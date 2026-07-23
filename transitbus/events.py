@@ -20,6 +20,7 @@ class Event[TResult = None](BaseModel):
     id: str = Field(default_factory=_new_id)
     parent_id: str | None = None
     created_at: datetime = Field(default_factory=_now)
+    path: list[str] = Field(default_factory=list)
 
 
 @dataclass(slots=True, frozen=True)

@@ -11,7 +11,7 @@ class WAL(ABC):
     async def append(self, event: Event) -> None: ...
 
 
-def serialize(event: Event) -> dict[str, object]:
+def _serialize(event: Event) -> dict[str, object]:
     return {"type": type(event).__name__, **event.model_dump(mode="json")}
 
 
@@ -22,7 +22,7 @@ class JsonlWAL(WAL):
         self._lock = asyncio.Lock()
 
     async def append(self, event: Event) -> None:
-        line = json.dumps(serialize(event))
+        line = json.dumps(_serialize(event))
         async with self._lock:
             await asyncio.to_thread(self._write, line)
 

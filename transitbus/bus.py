@@ -5,12 +5,12 @@ import typing
 import uuid
 from collections import deque
 from collections.abc import Awaitable, Callable
-from typing import overload
+from typing import Self, overload
 
 from transitbus.context import current_event, handling
 from transitbus.dispatch import Dispatch
 from transitbus.events import Event, HandlerResult
-from transitbus.log import WAL
+from transitbus.wal import WAL
 
 logger = logging.getLogger(__name__)
 
@@ -89,20 +89,28 @@ class EventBus:
 
     def _handlers_for(self, event: Event) -> list[Handler]:
         matched: list[Handler] = []
-        for event_type, handlers in self._handlers.items():
-            if isinstance(event, event_type):
-                matched.extend(handlers)
+        for event_type in type(event).__mro__:
+            matched.extend(self._handlers.get(event_type, ()))
         return matched
 
+    def forward_to(self, other: Self) -> None:
+        self.on(Event, other.dispatch)
+
     def dispatch[T](self, event: Event[T]) -> Dispatch[T]:
-        parent = current_event()
         handle: Dispatch[T] = Dispatch(event)
 
+        if self.name in event.path:
+            handle._complete([])
+            return handle
+        event.path.append(self.name)
+
+        parent = current_event()
         if parent is None:
             previous, self._tail = self._tail, handle
             asyncio.ensure_future(self._process_after(previous, handle))
         else:
-            event.parent_id = parent.id
+            if parent is not event:
+                event.parent_id = parent.id
             asyncio.ensure_future(self._process(handle))
 
         return handle

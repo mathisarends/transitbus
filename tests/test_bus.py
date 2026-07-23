@@ -162,3 +162,71 @@ async def test_history_records_processed_events() -> None:
 
     notes = [e.note for e in bus.history if isinstance(e, Ping)]
     assert notes == ["a", "b"]
+
+
+async def test_history_is_bounded_by_max_history() -> None:
+    bus = EventBus(max_history=2)
+    bus.on(Ping, lambda e: None)
+
+    for i in range(4):
+        await bus.dispatch(Ping(note=str(i)))
+
+    notes = [e.note for e in bus.history if isinstance(e, Ping)]
+    assert notes == ["2", "3"]
+
+
+async def test_history_is_unbounded_when_max_history_is_none() -> None:
+    bus = EventBus(max_history=None)
+    bus.on(Ping, lambda e: None)
+
+    for i in range(50):
+        await bus.dispatch(Ping(note=str(i)))
+
+    assert len(bus.history) == 50
+
+
+async def test_concrete_handlers_run_before_base_handlers() -> None:
+    bus = EventBus()
+    order: list[str] = []
+
+    bus.on(Event, lambda e: order.append("base"))
+    bus.on(Ping, lambda e: order.append("concrete"))
+
+    await bus.dispatch(Ping())
+
+    # type(event).__mro__ is walked concrete-first
+    assert order == ["concrete", "base"]
+
+
+async def test_idle_waits_for_all_queued_dispatches() -> None:
+    bus = EventBus()
+    done: list[int] = []
+
+    async def handler(event: Ping) -> None:
+        await asyncio.sleep(0.01)
+        done.append(int(event.note))
+
+    bus.on(Ping, handler)
+
+    for i in range(3):
+        bus.dispatch(Ping(note=str(i)))
+
+    assert done == []  # nothing awaited yet
+    await bus.idle()
+    assert sorted(done) == [0, 1, 2]
+
+
+async def test_idle_returns_immediately_on_fresh_bus() -> None:
+    bus = EventBus()
+
+    # no dispatches yet — must not hang or raise
+    await bus.idle(timeout=0.1)
+
+
+async def test_expect_cleans_up_waiter_after_timeout() -> None:
+    bus = EventBus()
+
+    with pytest.raises(asyncio.TimeoutError):
+        await bus.expect(Pong, timeout=0.01)
+
+    assert bus._waiters == []

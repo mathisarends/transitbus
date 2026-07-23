@@ -1,7 +1,5 @@
 # transitbus
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
 A small, type-safe, async event bus for Python. Events are plain
 [Pydantic](https://docs.pydantic.dev/) models, handlers subscribe by event
 **type**, and the whole thing is a few hundred lines you can read in one sitting.

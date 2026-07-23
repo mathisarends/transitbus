@@ -14,7 +14,7 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-class Event[TResult = None](BaseModel):
+class Event[TResult](BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str = Field(default_factory=_new_id)

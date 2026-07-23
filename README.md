@@ -1,5 +1,7 @@
 # transitbus
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A small, type-safe, async event bus for Python. Events are plain
 [Pydantic](https://docs.pydantic.dev/) models, handlers subscribe by event
 **type**, and the whole thing is a few hundred lines you can read in one sitting.
@@ -140,3 +142,10 @@ uv run ruff check
 The [`examples/`](examples/) directory has one runnable script per feature (see
 its [README](examples/README.md)); [`examples/orders.py`](examples/orders.py) is
 an end-to-end walkthrough.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how to install with uv and open a
+pull request.
+
+## License
+
+[MIT](LICENSE)

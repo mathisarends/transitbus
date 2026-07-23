@@ -1,3 +1,11 @@
+Metadata-Version: 2.4
+Name: transitbus
+Version: 0.1.0
+Summary: A small, type-safe, async event bus for Python
+Requires-Python: >=3.14
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=2.13.4
+
 # transitbus
 
 A small, type-safe, async event bus for Python. Events are plain
@@ -137,6 +145,4 @@ uv run pytest
 uv run ruff check
 ```
 
-The [`examples/`](examples/) directory has one runnable script per feature (see
-its [README](examples/README.md)); [`examples/orders.py`](examples/orders.py) is
-an end-to-end walkthrough.
+See [`examples/orders.py`](examples/orders.py) for an end-to-end walkthrough.
